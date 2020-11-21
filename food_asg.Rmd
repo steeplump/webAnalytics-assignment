@@ -1,0 +1,88 @@
+---
+title: "IST2334: Web and Network Analytics Assignment"
+author: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Group Members:
+
+Name            | Student ID
+----------------|------------
+Wong Yuen-Yi    | 17112723
+Wong Wei Chean  | 18000133
+
+
+## Introduction
+
+In this assignment, we have chosen an interesting data set of user interactions and uploads to Food.com, and subsequently performed three distinctive areas of analysis on the data. For this project, our aim is to:
+
+* analyse the opinions of the users to determine their feelings about the recipes (eg. were they satisfied, or did they have any negative experiences?) through sentiment analysis,
+* find out how certain characteristics about a recipe influences its rating, and
+* perform market basket analysis on the dataset to study ingredient patterns across different recipes. 
+
+Through performing these analysis, our hope is to be able to extract meaningful information from the large set of data. 
+
+## The Data Set
+
+The data set used in this assignment is by Shuyang Li and Bodhisattwa Prasad Majumder, taken from [Kaggle](https://www.kaggle.com/shuyangli94/food-com-recipes-and-user-interactions?select=PP_recipes.csv). This data set contains over 180,000 recipes and 700,000 recipe review uploads to Food.com over the past 18 years. Here, we have multiple CSV files that contain data about the recipes on the site, user information, and user interactions. 
+
+We will use several libraries to conduct our analysis for our project:
+
+```{r}
+library(tidyverse)
+library(igraph)
+library(tm)
+```
+
+Subsequently, we will load the relevant dataset files to conduct analysis:
+
+```{r}
+recipes <- read_csv("foodcom_dataset/RAW_recipes.csv")
+users <- read_csv("foodcom_dataset/PP_users.csv")
+interactions <- read_csv("foodcom_dataset/RAW_interactions.csv")
+```
+
+```{r}
+summary(recipes)
+summary(users)
+summary(interactions)
+```
+
+There are 231,637 recipe entries, each with 12 columns to describe them, such as recipe name, expected duration, date of submission, contributor, number of steps, and ingredients. As for the user information, there are 25,075 entries and 6 columns of user data, each describing the cooking techniques encountered by the user, recipes interacted with, number of interactions, ratings given to recipes and total number of ratings given. The last file contains information about user interactions on the site, which consists of 1,132,367 entries and 5 columns, which describe the interactions by the user ID, recipe ID, date published, rating and review comments. 
+
+These files contain large amounts of data; however, in this form, they do not provide any meaningful insights about the success of the website or recipes published on the website. As such, we have taken the opportunity to analyse this set of data to obtain indicative insights that will help us to understand better whether or not the website or certain recipes are successfully fulfilling the needs and wants of the users.
+
+## The Analysis
+
+In this section, we will explore three different types of analysis conducted on the Food.com dataset from Kaggle. 
+
+### Sentiment Analysis
+
+As stated in the aim of our project, we intend to use the dataset to discover the general opinions of the users to determine their feelings about the recipes on Food.com. This can be done through sentiment analysis, or opinion mining, which is a technique used to extract, quantify or identify subjective information. We can apply sentiment analysis on the reviews of the recipes published on Food.com to effectively analyse the position or the thoughts of the users about the recipes on the website.
+
+```{r}
+
+```
+
+### Relationships
+
+
+
+### Market Basket Analysis
+
+
+
+## Lessons Learned
+
+
+
+## Reflections
+
+
+## References 
+
+1. Shuyang Li, “Food.com Recipes and Interactions.” Kaggle, 2019, doi: 10.34740/KAGGLE/DSV/783630.
