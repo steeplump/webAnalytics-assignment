@@ -102,7 +102,7 @@ pp_worst_recipes <- worst_recipes %>% unnest_tokens(word, review) %>% anti_join(
 print(pp_worst_recipes)
 ```
 
-We will use the [NRC lexicon](https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm) to get sentiments from the reviews. The NRC lexicon helps categorise the text by classifying words and their associations with eight basic emotions (anger, fear, anticipation, trust, surprise, sadness, joy, and disgust) and two sentiments (negative and positive).
+We will use the [Bing lexicon](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html) to get sentiments from the reviews. The Bing lexicon helps categorise the text by classifying words and their associations with two sentiments (negative and positive).
 
 ```{r}
 #get sentiments from pp_top_recipes
@@ -121,7 +121,7 @@ print(top_sentiments)
 print(worst_sentiments)
 ```
 
-To better visualise the data, we can 
+To better visualise the data, we can plot the sentiment words against their frequency for `top_sentiments` and `worst_sentiments`. 
 
 ```{r}
 #visualise top_sentiments
