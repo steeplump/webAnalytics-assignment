@@ -34,8 +34,11 @@ We will use several libraries to conduct our analysis for our project:
 
 ```{r}
 library(tidyverse)
+library(tidytext)
+library(tidyr)
+library(dplyr)
 library(igraph)
-library(tm)
+library(ggplot2)
 ```
 
 Subsequently, we will load the relevant dataset files to conduct analysis:
@@ -62,11 +65,93 @@ In this section, we will explore three different types of analysis conducted on 
 
 ### Sentiment Analysis
 
-As stated in the aim of our project, we intend to use the dataset to discover the general opinions of the users to determine their feelings about the recipes on Food.com. This can be done through sentiment analysis, or opinion mining, which is a technique used to extract, quantify or identify subjective information. We can apply sentiment analysis on the reviews of the recipes published on Food.com to effectively analyse the position or the thoughts of the users about the recipes on the website.
+As stated in the aim of our project, we intend to use the dataset to discover the general opinions of the users to determine their feelings and opinions about the recipes on Food.com. This can be done through sentiment analysis, or opinion mining, which is a technique used to extract, quantify or identify subjective information. We can apply sentiment analysis on the reviews of the recipes published on Food.com to effectively analyse the position or the thoughts of the users about the recipes on the website.
+
+For this assignment, we will be performing sentiment analysis on 10 top-rated recipes and on 10 recipes with the the lowest rating. 
 
 ```{r}
+#remove recipes without rating from interactions
+pp_interactions <- na.omit(interactions)
 
+#load recipe with 5-star rating
+top_recipes <- pp_interactions %>%
+  arrange(rating) %>%
+  tail(10)
+
+#load recipe with 0-star rating
+worst_recipes <- pp_interactions %>%
+  filter(rating == 1) %>%
+  head(10)
+
+print(top_recipes)
+print(worst_recipes)
 ```
+
+Before the lexicon is applied to the dataset, first we must perform some pre-processing works, such as removing stop words and special characters from the review texts. This is because stop words and special characters may interfere with the integrity of the results of the sentiment analysis. 
+
+```{r}
+#load list of stop words from the Tidytext package
+data("stop_words")
+
+#tokenise and remove stop words from top_recipes
+pp_top_recipes <- top_recipes %>% unnest_tokens(word, review) %>% anti_join(stop_words) %>% 
+print(pp_top_recipes)
+
+#tokenise and remove stop words from worst_recipes
+pp_worst_recipes <- worst_recipes %>% unnest_tokens(word, review) %>% anti_join(stop_words)
+print(pp_worst_recipes)
+```
+
+We will use the [NRC lexicon](https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm) to get sentiments from the reviews. The NRC lexicon helps categorise the text by classifying words and their associations with eight basic emotions (anger, fear, anticipation, trust, surprise, sadness, joy, and disgust) and two sentiments (negative and positive).
+
+```{r}
+#get sentiments from pp_top_recipes
+top_sentiments <- pp_top_recipes %>% 
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+#get sentiments from pp_worst_recipes
+worst_sentiments <- pp_worst_recipes %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+print(top_sentiments)
+print(worst_sentiments)
+```
+
+To better visualise the data, we can 
+
+```{r}
+#visualise top_sentiments
+top_sentiments %>%
+  group_by(sentiment) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill = sentiment)) + 
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(y = "Sentiments of 10 Highest-Rated Recipes",
+       x = NULL) +
+  coord_flip()
+
+#visualise worst_sentiments
+worst_sentiments %>%
+  group_by(sentiment) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill = sentiment)) + 
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(y = "Sentiments of 10 Lowest-Rated Recipes",
+       x = NULL) +
+  coord_flip()
+```
+
+From the above, we can see that the number of positive sentiments for the 10 highest-rated recipes is much larger than the number of positive sentiments for the 10 lowest-rated recipes. In the same manner, the number of negative sentiments for the 10 lowest-rated recipes is larger than the number of negative sentiments for the 10 highest-rated recipes.
 
 ### Relationships
 
