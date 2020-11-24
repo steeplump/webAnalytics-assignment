@@ -18,3 +18,8 @@ Notes:
 * Difference between "lessons learned" and "reflection": 
   Lessons learned -> what you learned from the data, conclusion of assignment
   Reflection -> what you learned from performing analysis, how you appreciate data and data analytics more, personal lessons
+
+Instructions:
+
+* Download the dataset, unzip and save it as "foodcom_dataset" in your project directory.
+* The files in this repo should be placed in the project directory, not inside foodcom_dataset 
