@@ -16,8 +16,8 @@ Notes:
 
 * Submit everything as a single R markdown doc (report + analysis)
 * Difference between "lessons learned" and "reflection": 
-  Lessons learned -> what you learned from the data, conclusion of assignment
-  Reflection -> what you learned from performing analysis, how you appreciate data and data analytics more, personal lessons
+  + Lessons learned -> what you learned from the data, conclusion of assignment
+  + Reflection -> what you learned from performing analysis, how you appreciate data and data analytics more, personal lessons
 
 Instructions:
 
