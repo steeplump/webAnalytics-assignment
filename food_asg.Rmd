@@ -1,7 +1,9 @@
 ---
-title: "IST2334: Web and Network Analytics Assignment"
-author: ""
-output: html_document
+title: 'IST2334: Web and Network Analytics Assignment'
+author: ''
+output:
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -26,38 +28,42 @@ In this assignment, we have chosen an interesting data set of user interactions 
 
 Through performing these analysis, our hope is to be able to extract meaningful information from the large set of data. 
 
-## The Data Set
+## Libraries and The Data Set
+
+We will use several libraries to conduct our analysis for our project, namely:
+
+* `TidyVerse`, which in itself includes useful packages for data analyses that we will be using like `ggplot2`, `dplyr`, `tibble`, and `stringr`, 
+* `TidyText`, for text mining purposes in the sentiment analysis section,
+* `ARules`, for mining algorithms like APRIORI that are used in market basket analysis, and
+* `ARulesViz`, for visualisation of association rules.
+
+```{r include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(arules)
+library(arulesViz)
+```
 
 The data set used in this assignment is by Shuyang Li and Bodhisattwa Prasad Majumder, taken from [Kaggle](https://www.kaggle.com/shuyangli94/food-com-recipes-and-user-interactions?select=PP_recipes.csv). This data set contains over 180,000 recipes and 700,000 recipe review uploads to Food.com over the past 18 years. Here, we have multiple CSV files that contain data about the recipes on the site, user information, and user interactions. 
 
-We will use several libraries to conduct our analysis for our project:
+We will load the relevant dataset files to conduct analysis, which are `RAW_recipes.csv` and `RAW_interactions.csv`. These are the files with information that we are mainly concerned with in our analysis.
 
-```{r}
-library(tidyverse)
-library(tidytext)
-library(tidyr)
-library(dplyr)
-library(igraph)
-library(ggplot2)
-```
-
-Subsequently, we will load the relevant dataset files to conduct analysis:
-
-```{r}
+```{r include=FALSE}
 recipes <- read_csv("foodcom_dataset/RAW_recipes.csv")
-users <- read_csv("foodcom_dataset/PP_users.csv")
 interactions <- read_csv("foodcom_dataset/RAW_interactions.csv")
 ```
 
-```{r}
-summary(recipes)
-summary(users)
-summary(interactions)
+In the recipes file, there are 231,637 recipe entries, each with 12 columns to describe them, such as recipe name, expected duration, date of submission, contributor, number of steps, and ingredients. The interactions file contains information about user interactions on the site, which consists of 1,132,367 entries and 5 columns, which describe the interactions by the user ID, recipe ID, date published, rating and review comments. 
+
+For our analysis, we are also able to join or merge these files to give us more context to produce purposeful results.
+
+```{r include=FALSE}
+#merge recipes with interactions and remove rows with null value
+recipes_interactions <- inner_join(recipes, interactions, by = c("id" = "recipe_id")) %>%
+  na.omit(recipes_interactions)
 ```
 
-There are 231,637 recipe entries, each with 12 columns to describe them, such as recipe name, expected duration, date of submission, contributor, number of steps, and ingredients. As for the user information, there are 25,075 entries and 6 columns of user data, each describing the cooking techniques encountered by the user, recipes interacted with, number of interactions, ratings given to recipes and total number of ratings given. The last file contains information about user interactions on the site, which consists of 1,132,367 entries and 5 columns, which describe the interactions by the user ID, recipe ID, date published, rating and review comments. 
-
-These files contain large amounts of data; however, in this form, they do not provide any meaningful insights about the success of the website or recipes published on the website. As such, we have taken the opportunity to analyse this set of data to obtain indicative insights that will help us to understand better whether or not the website or certain recipes are successfully fulfilling the needs and wants of the users.
+These files in the dataset contain large amounts of data; however, in this form, they do not provide any meaningful insights about the success of the website or recipes published on the website. As such, we have taken the opportunity to analyse this set of data to obtain indicative insights that will help us to understand better whether or not the website or certain recipes are successfully fulfilling the needs and wants of the users.
 
 ## The Analysis
 
@@ -67,44 +73,45 @@ In this section, we will explore three different types of analysis conducted on 
 
 As stated in the aim of our project, we intend to use the dataset to discover the general opinions of the users to determine their feelings and opinions about the recipes on Food.com. This can be done through sentiment analysis, or opinion mining, which is a technique used to extract, quantify or identify subjective information. We can apply sentiment analysis on the reviews of the recipes published on Food.com to effectively analyse the position or the thoughts of the users about the recipes on the website.
 
-For this assignment, we will be performing sentiment analysis on 10 top-rated recipes and on 10 recipes with the the lowest rating. 
+For this assignment, we will be performing sentiment analysis on 20 top-rated recipes and on 20 recipes with the the lowest rating. The analysis in this section is done with references to [this tutorial from datacamp.com](https://www.datacamp.com/community/tutorials/sentiment-analysis-R).
 
-```{r}
+```{r include=FALSE}
 #remove recipes without rating from interactions
 pp_interactions <- na.omit(interactions)
 
 #load recipe with 5-star rating
 top_recipes <- pp_interactions %>%
   arrange(rating) %>%
-  tail(10)
+  tail(20)
 
 #load recipe with 0-star rating
 worst_recipes <- pp_interactions %>%
   filter(rating == 1) %>%
-  head(10)
-
-print(top_recipes)
-print(worst_recipes)
+  head(20)
 ```
 
-Before the lexicon is applied to the dataset, first we must perform some pre-processing works, such as removing stop words and special characters from the review texts. This is because stop words and special characters may interfere with the integrity of the results of the sentiment analysis. 
+Before the lexicon is applied to the dataset, first we must perform some pre-processing works, such as removing stop words and special characters from the review texts. Stop words are common words that appear in natural languages which do not provide meaning to our data and what we woud like to find out from it. It is important that these are removed from our dataset because stop words and special characters may interfere with the performance of our code and integrity of the results of the sentiment analysis, as removing stop words can most likely significantly reduce the number of postings that the system must store and process. This will help to increase the efficiency of the analysis process. 
 
-```{r}
+We will be using a list of stop words from the `Tidytext` package. These stop words in the list will be removed from our `top_recipes` and `worst_recipes` data by using the `anti_join` function after tokenizing the review texts by individual words. 
+
+```{r include=FALSE}
 #load list of stop words from the Tidytext package
 data("stop_words")
 
 #tokenise and remove stop words from top_recipes
-pp_top_recipes <- top_recipes %>% unnest_tokens(word, review) %>% anti_join(stop_words) %>% 
-print(pp_top_recipes)
+pp_top_recipes <- top_recipes %>%
+  unnest_tokens(word, review) %>%
+  anti_join(stop_words) 
 
 #tokenise and remove stop words from worst_recipes
-pp_worst_recipes <- worst_recipes %>% unnest_tokens(word, review) %>% anti_join(stop_words)
-print(pp_worst_recipes)
+pp_worst_recipes <- worst_recipes %>% 
+  unnest_tokens(word, review) %>% 
+  anti_join(stop_words)
 ```
 
-We will use the [Bing lexicon](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html) to get sentiments from the reviews. The Bing lexicon helps categorise the text by classifying words and their associations with two sentiments (negative and positive).
+Next, we will use the [Bing lexicon](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html) to get sentiments from `top_recipes` and `worst_recipes`. The Bing lexicon helps categorise the text by classifying words and their associations with two sentiments (negative and positive).
 
-```{r}
+```{r include=FALSE}
 #get sentiments from pp_top_recipes
 top_sentiments <- pp_top_recipes %>% 
   inner_join(get_sentiments("bing")) %>%
@@ -116,14 +123,11 @@ worst_sentiments <- pp_worst_recipes %>%
   inner_join(get_sentiments("bing")) %>%
   count(word, sentiment, sort = TRUE) %>%
   ungroup()
-
-print(top_sentiments)
-print(worst_sentiments)
 ```
 
-To better visualise the data, we can plot the sentiment words against their frequency for `top_sentiments` and `worst_sentiments`. 
+To visualise the data, we can plot the sentiment words against their frequency for `top_sentiments` and `worst_sentiments` using the `ggplot2` library. 
 
-```{r}
+```{r echo=FALSE}
 #visualise top_sentiments
 top_sentiments %>%
   group_by(sentiment) %>%
@@ -133,7 +137,7 @@ top_sentiments %>%
   ggplot(aes(word, n, fill = sentiment)) + 
   geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free_y") +
-  labs(y = "Sentiments of 10 Highest-Rated Recipes",
+  labs(y = "Sentiments of 20 Highest-Rated Recipes",
        x = NULL) +
   coord_flip()
 
@@ -146,28 +150,135 @@ worst_sentiments %>%
   ggplot(aes(word, n, fill = sentiment)) + 
   geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free_y") +
-  labs(y = "Sentiments of 10 Lowest-Rated Recipes",
+  labs(y = "Sentiments of 20 Lowest-Rated Recipes",
        x = NULL) +
   coord_flip()
 ```
 
-From the above, we can see that the number of positive sentiments for the 10 highest-rated recipes is much larger than the number of positive sentiments for the 10 lowest-rated recipes. In the same manner, the number of negative sentiments for the 10 lowest-rated recipes is larger than the number of negative sentiments for the 10 highest-rated recipes.
+From the above, we can see that the number of positive sentiments for the 20 highest-rated recipes is much larger than the number of positive sentiments for the 20 lowest-rated recipes. In the same manner, the number of negative sentiments for the 20 lowest-rated recipes is larger than the number of negative sentiments for the 20 highest-rated recipes. 
 
-### Relationships
+From the above, we can see that the number of positive sentiments for the 20 highest-rated recipes is much larger than the number of positive sentiments for the 20 lowest-rated recipes, where although there are more varying positive sentiment words used in the 1-star recipes, the frequencies of the positive sentiment words used in the 5-star recipe reviews are higher. For example, the word "delicious" was used a total of 7 times in the top 20 reviews, while it was only used once in the reviews of the 1-star recipes.
 
+We can also note that the number of negative sentiments from the lowest-rated recipes is much larger than that from the highest-rated recipes. This is expected, as typically, users tend to give low ratings to recipes when their sentiment is generally negative such as bad experiences with the method, or the dish did not turn out as they expected. For example, there are 34 different negative sentiment words that appear in the 1-star recipe reviews, while only 14 different negative sentiment words appear in the 5-star recipe reviews. 
 
+From this portion, we validated that for recipes which received 5-star ratings, the number of positive sentiment words that appear in the reviews section is much greater than the number of positive sentiment words that appear in the reviews of 1-star recipes. In the same manner, the number of negative sentiment words that appear in the reviews of 5-star recipes is very much less than the number of negative sentiment words that appear in the reviews of 1-star recipes. This has proved that the rating feature on the website is an effective way to rank the recipe based on how well-received it is by the users. As such, we can conclude that the rating scale is able to provide rather accurate approximation of the users' general opinion about a given recipe. This information is useful for the Food.com management to gauge the user experience of a particular recipe, and devise appropriate marketing strategies that can help to promote recipes that are popular. By doing so, they will be able to bring in more new users to the site and encourage existing users to return to their site to try more recipes.
+
+### Correlation
+
+We will use this section to answer an interesting question about the data set:
+
+Does rating of recipe and complexity of recipe have any correlation? 
+
+The analysis in this section is inspired by one of the notebooks found in the Food.com Recipe and Interactions Kaggle site. The [notebook](https://www.kaggle.com/etsc9287/food-com-eda-and-text-analysis) calculates the correlation between length of review and rating of recipe. In our case, we are looking for the correlation between rating and complexity of the recipes, but we do adopt similar techniques to obtain results.  
+
+For this, we will merge `recipes` and `interactions` to get the ratings associated with each recipe. To measure the complexity of the recipes, we will use the `n_ingredients`, which represents the number of ingredients involved in the recipe. We have chosen to use this variable as the measurement for complexity because typically, the higher the number of ingredients, the more complicated the method of food preparation is. 
+
+```{r include=FALSE}
+#merge recipes with interactions and remove rows with null value
+recipes_interactions <- inner_join(recipes, interactions, by = c("id" = "recipe_id")) %>%
+  na.omit(recipes_interactions)
+```
+
+We will group the data by their recipe ID, and find the correlation coefficient between number of steps and rating of recipe by using the `cor()` function. 
+
+```{r echo=FALSE}
+#
+rating_complexity <- recipes_interactions %>%
+  na.omit(recipes_interactions) %>%
+  select(id, rating, n_ingredients) %>%
+  group_by(id) %>%
+  mutate(rating = as.character(rating))
+
+#visualise data
+ggplot(rating_complexity) +
+  aes(x = n_ingredients, y = rating) +
+  geom_point(colour = "darkolivegreen") +
+  theme_minimal() +
+  labs(y = "Rating (Stars)",
+       x = "Number of Ingredients / Complexity")
+
+#calculate correlation of complexity and rating
+cor(rating_complexity$n_ingredients, as.numeric(rating_complexity$rating))
+
+```
+
+From the scatter plot, we can observe that the number of ingredients for recipes ranging from 0- to 5-stars generally fall between 1 to 40 ingredients. There does not seem to be a significant trend in number of ingredients across the recipes of different ratings. However, it is found that for 3-star recipes, the average number of ingredients is the lowest among the other ratings while the average number of ingredients for 5-star recipes is the highest.
+
+The correlation coefficient calculated between the number of ingredients, which represents complexity, and the rating of the recipes is about -0.004. This negative value shows that the trend of the variables move in opposite directions; in other words, the number of ingredients decreases as the rating of the recipes increase. Yet, it must be noted that the value of the coefficient is very small. This tells us that the two variables have a very weak linear relationship. Thus, it can be said that there is almost no meaningful relationship between the complexity of the recipe and the rating. 
+
+Calculating the correlation between complexity and ratings of the recipes showed that there is close to no correlation between the two variables, despite its small, almost insignificant negative value. This means that recipes uploaded on Food.com can have high ratings regardless of the complexity of the recipe, which we have measured by considering the number of ingredients called for by the recipe. This may be because Food.com attracts users of all cooking skill levels; from amateur home-cooks who want to master basic techniques to more advanced chefs looking to expand their repertoire. Hence, even the simplest or most tedious of recipes may be well-received by users. This insight can tell us that since their target audience is wide and from different skill levels, Food.com must ensure that recipes and other website content must be regularly updated for every skill-level group in order to effectively increase the web traffic.
 
 ### Market Basket Analysis
 
+Market basket analysis is typically used to predict future purchase decisions of customers in a business setting. However, we will be applying the market basket analysis concept on our dataset to see ingredient patterns across the recipes uploaded on Food.com. For this analysis, we have referred to [this tutorial](https://www.datacamp.com/community/tutorials/market-basket-analysis-r#code), particularly the section on implementing market basket analysis and association rule mining in R. 
 
+To begin this process, we select the relevant columns of data from the tibble of recipes. Since we are only interested with the ingredients of the recipes, we select the `ingredients` column and use the `na.omit()` function to remove any null values from the set. 
+
+Following that, we perform some pre-processing of the selected data, that is to write the recipe ingredients to a CSV file and convert it to a transaction object. This allows us to easily count the number of individual ingredients as each of the items are separated by a comma. We are then able to visualise the data through a frequency plot of the ingredients. Below, a frequency bar chart of the 20 most common ingredients that appear in all the recipes on Food.com is plotted using the `itemFrequencyPlot()` function from the `arules` library. 
+
+```{r echo=FALSE}
+recipe_ingr <- recipes %>%
+  select(id, ingredients) %>%
+  na.omit(recipe_ingr)
+
+#pre-processing the data; write recipe_ingr to csv and convert to transaction object
+write.csv(recipe_ingr,"mba_ingredients.csv", quote = FALSE, row.names = FALSE)
+mba_ingr <- read.transactions('mba_ingredients.csv', format = 'basket', sep=',')
+
+#visualise the data
+itemFrequencyPlot(mba_ingr,topN=20,type="absolute", main="Ingredient Frequency Plot")
+```
+
+From the Ingredient Frequency Plot, we can see the top 20 common ingredients in the recipes from Food.com. From this we can note the ingredients that are most important to have at home, or "pantry staples" for cooking any sort of recipe. 
+
+Next, we move on to generate some association rules from the data using APRIORI algorithm. This is easily done in R by using the `arules` library. Through trial and error, we have found that the support and confidence thresholds to obtain around 30 rules is 0.015 and 0.5 respectively. Using these values, the `apriori` method and the `plot()` function, we can generate the rules and plot a graph of the rules. 
+```{r echo=FALSE}
+#define the support and confidence threshold and obtain rules using APRIORI algorithm
+support <- 0.015
+confidence <- 0.5
+
+rules <- apriori(mba_ingr, parameter=list(sup=support, 
+                                   conf=confidence, target="rules"))
+
+top_rules <- sort(rules, decreasing = TRUE, na.last = NA, by = "confidence")
+
+inspect(top_rules)
+
+plot(top_rules, method="graph")
+```
+
+It is established that salt is the most commonly used ingredient in this data set. By reading the generated rules `top_rules`, it is found that, in more than half of the recipes found on Food.com, salt is used together with onion and pepper, all-purpose flour, baking soda and eggs, and other combinations of ingredients. Similarly, sugar is also used with ingredient combinations such as baking powder and eggs, and baking powder and salt in about 50% of the recipes. From this, we can infer that at least about 50% of recipes are recipes for baked goods, due to the fact that baking soda and baking powder are used for baking. 
+
+From plotted graph, we can determine the more significant ingredients of the lot, or rather, ingredients that are more heavily called for in recipes, by the appearances of the nodes in the graph. The larger the circle, the higher the support and the darker the pink, the higher the lift. In this case, for example, the probability that eggs appear together with salt have high support but low lift, as the size of the circle is relatively large compared to other ingredients and the circle is quite light in colour. High support tells us that this combination of ingredients appear frequently, while low lift indicates that the association between the two ingredients is not very strong.
+
+Through conducting market basket analysis on the dataset, we learned that, unsurprisingly, salt is the most common ingredient in food recipes. We were also able to generate 31 association rules that showed the likelihood of a particular ingredient being used if another ingredient appears in the recipe. For example, it was found that in about 77% of recipes on Food.com that called for pepper also called for salt. By knowing this information, we are able to predict the different combinations of ingredients that people are likely to purchase together at a supermarket or grocery shop. Supermarkets and grocery shops can greatly benefit from knowing this sort of information, as they will be able to boost the effectiveness of their marketing models, promotional efforts and even store layouts. In this, they can adjust their product arrangements and offer purchase-with-purchase deals that will greatly increase customer satisfaction, which in turn would generate more profits.
 
 ## Lessons Learned
 
+After performing the analysis, we have learned several interesting things from the data set. Out of the large amount of raw data that we had about the recipes and interactions on Food.com, we were able to extract meaningful information which can help to provide useful insights about the nature of the website. These insights can not only be used by Food.com management, but other relevant companies or organisations to reason what type of marketing tactics or business decisions should be made to increase the success of their services or products. For example, supermarkets or grocers can leverage on the information derived from the market basket analysis portion to adjust their marketing strategies and provide more satisfactory offers to their customers, which will help them to generate more profits and return customers.
 
+One of the most important things that we have learned from this assignment is the real-world application of data analytics. We were able to apply some prominent concepts that we have learned in theory during lectures, and strongly believe that being able to implement these concepts on a real set of data helped us to fully understand and appreciate them. We also learned that making mistakes is okay - in programming, we must learn from our mistakes, and we are heavily supported not only by immediate friends and our lecturers, but also by online resources. Through this assignment, we were able to learn to detect and solve errors in R through independent research by referring and learning from community forums such as DataCamp Community and Stack Overflow. 
+
+For future projects involving data analysis, we will work on improving the quality of the results by using more techniques to clean up the data before processing it. One example would be to check for and remove outliers in the dataset before conducting any sort of analysis on it. On the same note, we believe that this is one of a few aspects that we should improve in our project. 
 
 ## Reflections
+### Wong Yuen-Yi
+Through this assignment, I have gained invaluable knowledge about data analytics. As a Computer Science student with not much prior knowledge in data analytics, I feel that I can understand and appreciate the practice much more than before. During the course of this subject and especially through this assignment, I have realised the potential and beauty of data analytics, which can help us make sense of large amounts of data, all of which is abundant in this day and age. I have also learned to code in R, which I believe is a valuable skill to have, as it is widely used in statistical computing, data mining and data analysis. All in all, these skills that I have gained will definitely help me to grow into a more well-rounded and better developer in the future. 
 
+One thing that I have learned through completing this assignment is that some concepts such as market basket analysis are multipurpose and can be applied to many different situations. For instance, we have applied market basket analysis to obtain information about the most common ingredients across the recipes found on Food.com and the likelihood of certain ingredients to appear in recipes when another ingredient is used. In the initial stages of the assignment, I was skeptical that this would produce relevant results or give meaningful insights; however, I was pleasantly surprised to be able to prove myself wrong. 
+
+All in all, these lessons that I have learned have essentially opened my eyes to the value of data and data analytics, while also sparking my interest in the subject. I have also learned to use GitHub for the purpose of collaborating on this assignment with my groupmate, which I think will be a useful skill for future projects or assignments and even possibly in the workforce. All things considered, despite running into many errors that required fixing, ultimately I feel that this project is very rewarding and I had a positive experience from completing this assignment. 
+
+### Wong Wei Chean
+
+I believe this project has been a fruitful experience for several reasons, namely, I was able to learn how to implement some important theories that I have learned from the lectures in this subject. Applying these analysis on a real world dataset helped me to grow as a developer because I now know how to properly analyse data and produce useful observations that can be used to drive successes in businesses and especially websites. 
+
+Throughout the process of doing this assignment, I encountered several unexpected situations where we had to adapt. For example, my groupmate and I had to change our initial plan for one of our analysis, which was to compare the ratings of vegetarian recipes against those of non-vegetarian recipes. However, we were not able to perform that analysis but we quickly found a replacement, which is the correlation between ratings and complexity of the recipes. Besides that, there were many instances where I encountered errors in my code, but as I seeked help from my groupmate, classmates and online resources, I was able to learn from others and solve the errors relatively quickly. 
 
 ## References 
 
 1. Shuyang Li, “Food.com Recipes and Interactions.” Kaggle, 2019, doi: 10.34740/KAGGLE/DSV/783630.
+2. D. Liske, "Tidy Sentiment Analysis in R", DataCamp Community, 2020. [Online]. Available: https://www.datacamp.com/community/tutorials/sentiment-analysis-R. [Accessed: 27- Nov- 2020].
+3. Minqing Hu and Bing Liu, ``Mining and summarizing customer reviews.'', Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.
+4. E. Schacht, "🍕 Food.com EDA and Text Analysis 🌯", Kaggle.com, 2020. [Online]. Available: https://www.kaggle.com/etsc9287/food-com-eda-and-text-analysis. [Accessed: 27- Nov- 2020].
+5. H. Jabeen, "Market Basket Analysis using R", DataCamp Community, 2020. [Online]. Available: https://www.datacamp.com/community/tutorials/market-basket-analysis-r#code. [Accessed: 27- Nov- 2020].
