@@ -279,6 +279,6 @@ Throughout the process of doing this assignment, I encountered several unexpecte
 
 1. Shuyang Li, “Food.com Recipes and Interactions.” Kaggle, 2019, doi: 10.34740/KAGGLE/DSV/783630.
 2. D. Liske, "Tidy Sentiment Analysis in R", DataCamp Community, 2020. [Online]. Available: https://www.datacamp.com/community/tutorials/sentiment-analysis-R. [Accessed: 27- Nov- 2020].
-3. Minqing Hu and Bing Liu, ``Mining and summarizing customer reviews.'', Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.
+3. Minqing Hu and Bing Liu, ''Mining and summarizing customer reviews.'', Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD-2004), Seattle, Washington, USA, Aug 22-25, 2004.
 4. E. Schacht, "🍕 Food.com EDA and Text Analysis 🌯", Kaggle.com, 2020. [Online]. Available: https://www.kaggle.com/etsc9287/food-com-eda-and-text-analysis. [Accessed: 27- Nov- 2020].
 5. H. Jabeen, "Market Basket Analysis using R", DataCamp Community, 2020. [Online]. Available: https://www.datacamp.com/community/tutorials/market-basket-analysis-r#code. [Accessed: 27- Nov- 2020].
